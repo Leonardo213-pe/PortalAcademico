@@ -1,0 +1,108 @@
+@model PortalAcademicoWeb.Models.Curso
+@{
+    ViewData["Title"] = Model.Nombre;
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Cursos" asp-action="Index">Catálogo</a>
+        </li>
+        <li class="breadcrumb-item active">@Model.Nombre</li>
+    </ol>
+</nav>
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">@Model.Nombre</h3>
+        <span class="badge bg-secondary fs-6">@Model.Codigo</span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Créditos</strong></td>
+                        <td>@Model.Creditos</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cupo máximo</strong></td>
+                        <td>@Model.CupoMaximo</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cupos disponibles</strong></td>
+                        <td>
+                            @if (Model.CuposDisponibles > 0)
+                            {
+                                <span class="text-success fw-bold">
+                                    @Model.CuposDisponibles disponibles
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fw-bold">Sin cupos</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Horario</strong></td>
+                        <td>
+                            @Model.HorarioInicio.ToString("HH:mm")
+                            – @Model.HorarioFin.ToString("HH:mm")
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado</strong></td>
+                        <td>
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactivo</span>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Botón inscribirse -->
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            @if (Model.CuposDisponibles > 0)
+            {
+                <form method="post" asp-controller="Matriculas" asp-action="Inscribir">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="cursoId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success btn-lg">
+                        ✅ Inscribirme en este curso
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-danger">
+                    Este curso no tiene cupos disponibles.
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <a href="/Identity/Account/Login">Inicia sesión</a>
+                para inscribirte en este curso.
+            </div>
+        }
+    </div>
+    <div class="card-footer">
+        <a asp-controller="Cursos" asp-action="Index"
+           class="btn btn-outline-secondary">
+            ← Volver al catálogo
+        </a>
+    </div>
+</div>
