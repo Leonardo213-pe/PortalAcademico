@@ -28,7 +28,10 @@ dotnet ef database update
 dotnet run
 ```
 
-Abrir en el navegador: `http://localhost:5000`
+Abrir en el navegador: `http://localhost:xxxx.
+git add .
+git commit -m "P6: Dockerfile, README y configuracion para deploy en Render"
+git push origin deploy/render`
 
 ## Variables de entorno
 
