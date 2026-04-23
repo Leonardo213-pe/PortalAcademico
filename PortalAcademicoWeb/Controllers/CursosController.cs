@@ -1,17 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using PortalAcademicoWeb.Data;
 using PortalAcademicoWeb.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PortalAcademicoWeb.Controllers;
 
 public class CursosController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly IDistributedCache _cache;
+    private const string CACHE_KEY = "cursos_activos";
 
-    public CursosController(ApplicationDbContext db)
+    // Opciones JSON que evitan el ciclo infinito
+    private static readonly JsonSerializerOptions _jsonOpts = new()
+    {
+        ReferenceHandler = ReferenceHandler.Preserve
+    };
+
+    public CursosController(ApplicationDbContext db, IDistributedCache cache)
     {
         _db = db;
+        _cache = cache;
     }
 
     // GET: /Cursos
@@ -22,40 +34,76 @@ public class CursosController : Controller
         string? horarioDesde,
         string? horarioHasta)
     {
-        var query = _db.Cursos
-            .Include(c => c.Matriculas)
-            .Where(c => c.Activo)
-            .AsQueryable();
+        List<Curso> todosCursos;
 
-        // Filtro por nombre
+        bool hayFiltros = !string.IsNullOrEmpty(nombre)
+            || creditosMin.HasValue
+            || creditosMax.HasValue
+            || !string.IsNullOrEmpty(horarioDesde)
+            || !string.IsNullOrEmpty(horarioHasta);
+
+        if (!hayFiltros)
+        {
+            var cached = await _cache.GetStringAsync(CACHE_KEY);
+            if (cached != null)
+            {
+                todosCursos = JsonSerializer.Deserialize<List<Curso>>(
+                    cached, _jsonOpts) ?? new List<Curso>();
+            }
+            else
+            {
+                todosCursos = await _db.Cursos
+                    .Include(c => c.Matriculas)
+                    .Where(c => c.Activo)
+                    .ToListAsync();
+
+                var opciones = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+                };
+
+                await _cache.SetStringAsync(
+                    CACHE_KEY,
+                    JsonSerializer.Serialize(todosCursos, _jsonOpts),
+                    opciones);
+            }
+        }
+        else
+        {
+            todosCursos = await _db.Cursos
+                .Include(c => c.Matriculas)
+                .Where(c => c.Activo)
+                .ToListAsync();
+        }
+
+        // Aplicar filtros en memoria
+        var cursos = todosCursos.AsEnumerable();
+
         if (!string.IsNullOrEmpty(nombre))
-            query = query.Where(c => c.Nombre.Contains(nombre));
+            cursos = cursos.Where(c =>
+                c.Nombre.Contains(nombre, StringComparison.OrdinalIgnoreCase));
 
-        // Filtro por créditos
         if (creditosMin.HasValue)
-            query = query.Where(c => c.Creditos >= creditosMin.Value);
+            cursos = cursos.Where(c => c.Creditos >= creditosMin.Value);
 
         if (creditosMax.HasValue)
-            query = query.Where(c => c.Creditos <= creditosMax.Value);
+            cursos = cursos.Where(c => c.Creditos <= creditosMax.Value);
 
-        // Filtro por horario
         if (!string.IsNullOrEmpty(horarioDesde) &&
             TimeOnly.TryParse(horarioDesde, out var desde))
-            query = query.Where(c => c.HorarioInicio >= desde);
+            cursos = cursos.Where(c => c.HorarioInicio >= desde);
 
         if (!string.IsNullOrEmpty(horarioHasta) &&
             TimeOnly.TryParse(horarioHasta, out var hasta))
-            query = query.Where(c => c.HorarioFin <= hasta);
+            cursos = cursos.Where(c => c.HorarioFin <= hasta);
 
-        // Guardar filtros en ViewBag para mantenerlos en el form
         ViewBag.Nombre = nombre;
         ViewBag.CreditosMin = creditosMin;
         ViewBag.CreditosMax = creditosMax;
         ViewBag.HorarioDesde = horarioDesde;
         ViewBag.HorarioHasta = horarioHasta;
 
-        var cursos = await query.ToListAsync();
-        return View(cursos);
+        return View(cursos.ToList());
     }
 
     // GET: /Cursos/Detalle/5
@@ -68,7 +116,7 @@ public class CursosController : Controller
         if (curso == null)
             return NotFound();
 
-        // Guardar último curso visitado en sesión (P4)
+        // Guardar último curso visitado en sesión
         HttpContext.Session.SetString("UltimoCursoId", id.ToString());
         HttpContext.Session.SetString("UltimoCursoNombre", curso.Nombre);
 
