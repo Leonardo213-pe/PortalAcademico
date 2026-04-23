@@ -5,9 +5,10 @@ using PortalAcademicoWeb.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EF Core + SQLite
+// Base de datos SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Identity con roles
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
@@ -20,7 +21,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Sesiones (Redis o memoria local)
+// Redis o memoria local como fallback
 var redisConn = builder.Configuration["Redis:ConnectionString"];
 if (!string.IsNullOrEmpty(redisConn))
 {
@@ -35,6 +36,7 @@ else
     builder.Services.AddDistributedMemoryCache();
 }
 
+// Sesiones
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -43,15 +45,16 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages(); // necesario para Identity UI
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// Seed de datos al iniciar
+// Aplicar migraciones y seed al iniciar
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate(); // aplica migraciones automáticamente
+    var db = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
     await SeedData.InitializeAsync(scope.ServiceProvider);
 }
 
@@ -71,6 +74,6 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages(); // rutas de Identity (/Identity/Account/Login, etc.)
+app.MapRazorPages();
 
 app.Run();
