@@ -1,8 +1,71 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center py-5">
+    <h1 class="display-4 fw-bold">🎓 Portal Académico</h1>
+    <p class="lead text-muted">Gestión de cursos y matrículas universitarias</p>
+    <hr class="my-4" />
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <p class="fs-5">Bienvenido, <strong>@User.Identity.Name</strong></p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="/Cursos" class="btn btn-primary btn-lg">📚 Ver Catálogo</a>
+            <a href="/Matriculas/MisMatriculas"
+               class="btn btn-outline-secondary btn-lg">📋 Mis Matrículas</a>
+            @if (User.IsInRole("Coordinador"))
+            {
+                <a href="/Coordinador" class="btn btn-warning btn-lg">⚙ Coordinador</a>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="fs-5 text-muted">
+            Inicia sesión para inscribirte en los cursos disponibles
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="/Identity/Account/Login"
+               class="btn btn-primary btn-lg">Iniciar sesión</a>
+            <a href="/Identity/Account/Register"
+               class="btn btn-outline-primary btn-lg">Registrarse</a>
+        </div>
+    }
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body py-4">
+                <div class="fs-1 mb-3">📚</div>
+                <h5 class="card-title">Catálogo de Cursos</h5>
+                <p class="card-text text-muted">
+                    Explora cursos disponibles y filtra por nombre, créditos y horario.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body py-4">
+                <div class="fs-1 mb-3">✅</div>
+                <h5 class="card-title">Inscripción Fácil</h5>
+                <p class="card-text text-muted">
+                    Inscríbete con validación automática de cupos y horarios.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body py-4">
+                <div class="fs-1 mb-3">📋</div>
+                <h5 class="card-title">Mis Matrículas</h5>
+                <p class="card-text text-muted">
+                    Consulta el estado de tus inscripciones en tiempo real.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
