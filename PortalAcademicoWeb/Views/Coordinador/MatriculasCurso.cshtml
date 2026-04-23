@@ -1,0 +1,91 @@
+@model PortalAcademicoWeb.Models.Curso
+@{
+    ViewData["Title"] = $"Matrículas - {Model.Nombre}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Coordinador" asp-action="Index">Panel</a>
+        </li>
+        <li class="breadcrumb-item active">Matrículas de @Model.Nombre</li>
+    </ol>
+</nav>
+
+<h2 class="mb-4">📋 Matrículas — @Model.Nombre</h2>
+
+@if (!Model.Matriculas.Any())
+{
+    <div class="alert alert-info">
+        Este curso no tiene matrículas registradas.
+    </div>
+}
+else
+{
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Estudiante</th>
+                <th>Email</th>
+                <th>Fecha registro</th>
+                <th>Estado actual</th>
+                <th>Cambiar estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in Model.Matriculas.OrderByDescending(x => x.FechaRegistro))
+            {
+                <tr>
+                    <td>@m.Usuario?.NombreCompleto</td>
+                    <td>@m.Usuario?.Email</td>
+                    <td>@m.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @switch (m.Estado)
+                        {
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Pendiente:
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                break;
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Confirmada:
+                                <span class="badge bg-success">Confirmada</span>
+                                break;
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Cancelada:
+                                <span class="badge bg-danger">Cancelada</span>
+                                break;
+                        }
+                    </td>
+                    <td>
+                        <form method="post"
+                              asp-controller="Coordinador"
+                              asp-action="CambiarEstado"
+                              style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="matriculaId" value="@m.Id" />
+                            <input type="hidden" name="cursoId" value="@Model.Id" />
+
+                            @if (m.Estado != PortalAcademicoWeb.Models.EstadoMatricula.Confirmada)
+                            {
+                                <button type="submit" name="estado" value="Confirmada"
+                                        class="btn btn-sm btn-success">
+                                    Confirmar
+                                </button>
+                            }
+                            @if (m.Estado != PortalAcademicoWeb.Models.EstadoMatricula.Cancelada)
+                            {
+                                <button type="submit" name="estado" value="Cancelada"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Cancelar esta matrícula?')">
+                                    Cancelar
+                                </button>
+                            }
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-controller="Coordinador" asp-action="Index"
+   class="btn btn-outline-secondary mt-2">
+    ← Volver al panel
+</a>

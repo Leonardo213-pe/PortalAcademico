@@ -1,0 +1,81 @@
+@model PortalAcademicoWeb.Models.Curso
+@{
+    ViewData["Title"] = "Editar Curso";
+}
+
+<h2 class="mb-4">✏ Editar Curso</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post"
+              asp-controller="Coordinador"
+              asp-action="EditarCurso"
+              asp-route-id="@Model.Id">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="Codigo" class="form-label">Código</label>
+                    <input asp-for="Codigo" class="form-control" />
+                    <span asp-validation-for="Codigo" class="text-danger small"></span>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="Nombre" class="form-label">Nombre</label>
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Creditos" class="form-label">Créditos</label>
+                    <input asp-for="Creditos" type="number"
+                           class="form-control" min="1" max="20" />
+                    <span asp-validation-for="Creditos" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="CupoMaximo" class="form-label">Cupo máximo</label>
+                    <input asp-for="CupoMaximo" type="number"
+                           class="form-control" min="1" />
+                    <span asp-validation-for="CupoMaximo" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <div class="form-check mt-2">
+                        <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                        <label asp-for="Activo" class="form-check-label">Activo</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="HorarioInicio" class="form-label">
+                        Horario inicio
+                    </label>
+                    <input asp-for="HorarioInicio" type="time" class="form-control" />
+                    <span asp-validation-for="HorarioInicio"
+                          class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="HorarioFin" class="form-label">
+                        Horario fin
+                    </label>
+                    <input asp-for="HorarioFin" type="time" class="form-control" />
+                    <span asp-validation-for="HorarioFin"
+                          class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    Guardar cambios
+                </button>
+                <a asp-controller="Coordinador" asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
