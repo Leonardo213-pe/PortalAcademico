@@ -1,0 +1,117 @@
+@model IEnumerable<PortalAcademicoWeb.Models.Curso>
+@{
+    ViewData["Title"] = "Catálogo de Cursos";
+}
+
+<h2 class="mb-4">📚 Catálogo de Cursos</h2>
+
+<!-- Formulario de filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" asp-controller="Cursos" asp-action="Index">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nombre</label>
+                    <input name="nombre" class="form-control"
+                           value="@ViewBag.Nombre"
+                           placeholder="Buscar por nombre..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Créditos mín.</label>
+                    <input name="creditosMin" type="number"
+                           class="form-control"
+                           value="@ViewBag.CreditosMin"
+                           min="1" max="20" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Créditos máx.</label>
+                    <input name="creditosMax" type="number"
+                           class="form-control"
+                           value="@ViewBag.CreditosMax"
+                           min="1" max="20" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Horario desde</label>
+                    <input name="horarioDesde" type="time"
+                           class="form-control"
+                           value="@ViewBag.HorarioDesde" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Horario hasta</label>
+                    <input name="horarioHasta" type="time"
+                           class="form-control"
+                           value="@ViewBag.HorarioHasta" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        🔍 Filtrar
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-controller="Cursos" asp-action="Index"
+                       class="btn btn-outline-secondary w-100">
+                        ✖ Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados -->
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No se encontraron cursos con esos filtros.
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var curso in Model)
+        {
+            <div class="col">
+                <div class="card h-100 @(curso.CuposDisponibles == 0 ? "border-danger" : "border-success")">
+                    <div class="card-header d-flex justify-content-between">
+                        <span class="badge bg-secondary">@curso.Codigo</span>
+                        <span class="badge bg-info text-dark">
+                            @curso.Creditos créditos
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@curso.Nombre</h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                🕐 @curso.HorarioInicio.ToString("HH:mm")
+                                – @curso.HorarioFin.ToString("HH:mm")
+                            </small>
+                        </p>
+                        <p class="card-text">
+                            <strong>Cupos disponibles: </strong>
+                            @if (curso.CuposDisponibles > 0)
+                            {
+                                <span class="text-success fw-bold">
+                                    @curso.CuposDisponibles
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fw-bold">Sin cupos</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-controller="Cursos"
+                           asp-action="Detalle"
+                           asp-route-id="@curso.Id"
+                           class="btn btn-outline-primary btn-sm w-100">
+                            Ver detalle →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
