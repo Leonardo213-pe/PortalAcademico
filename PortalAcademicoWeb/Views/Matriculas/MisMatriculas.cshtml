@@ -1,0 +1,66 @@
+@model IEnumerable<PortalAcademicoWeb.Models.Matricula>
+@{
+    ViewData["Title"] = "Mis Matrículas";
+}
+
+<h2 class="mb-4">📋 Mis Matrículas</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No tienes matrículas aún.
+        <a asp-controller="Cursos" asp-action="Index">Ver catálogo de cursos</a>.
+    </div>
+}
+else
+{
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Curso</th>
+                <th>Código</th>
+                <th>Horario</th>
+                <th>Créditos</th>
+                <th>Estado</th>
+                <th>Fecha registro</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td>@m.Curso.Nombre</td>
+                    <td>
+                        <span class="badge bg-secondary">@m.Curso.Codigo</span>
+                    </td>
+                    <td>
+                        @m.Curso.HorarioInicio.ToString("HH:mm")
+                        – @m.Curso.HorarioFin.ToString("HH:mm")
+                    </td>
+                    <td>@m.Curso.Creditos</td>
+                    <td>
+                        @switch (m.Estado)
+                        {
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Pendiente:
+                                <span class="badge bg-warning text-dark">
+                                    Pendiente
+                                </span>
+                                break;
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Confirmada:
+                                <span class="badge bg-success">Confirmada</span>
+                                break;
+                            case PortalAcademicoWeb.Models.EstadoMatricula.Cancelada:
+                                <span class="badge bg-danger">Cancelada</span>
+                                break;
+                        }
+                    </td>
+                    <td>@m.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-controller="Cursos" asp-action="Index" class="btn btn-outline-primary mt-2">
+    ← Ver más cursos
+</a>
